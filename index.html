@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Stock Analyzer | பழ இருப்பு பகுப்பாய்வி</title>
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- ChartJS library via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media (max-width: 768px) {
+            .history-main-grid {
+                grid-template-columns: 1fr !important; /* Stack columns on smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas Particles & Glowing Meshes Background -->
+    <canvas id="bg-particles"></canvas>
+    <div class="ambient-blur"></div>
+
+    <!-- App Shell Container -->
+    <div class="app-container">
+        
+        <!-- Collapsible Mobile Menu Toggle -->
+        <div class="menu-toggle" id="mobile-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" width="24" height="24">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="rgba(16, 185, 129, 0.2)"/>
+                        <path d="M12 2C11.5 4 10 5.5 8 6" stroke-linecap="round"/>
+                        <path d="M12 2C12.5 4 14 5.5 16 6" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span class="logo-text" data-translate="brand_title">Fruit Stock Analyzer</span>
+                    <span class="logo-tag" data-translate="brand_subtitle">SK FRUITS • TAMIL NADU</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav style="flex-grow: 1;">
+                <ul class="menu-list">
+                    <li class="menu-item active">
+                        <a href="#" class="nav-link" data-target="view-dashboard">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                            <span data-translate="nav_dashboard">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#" class="nav-link" data-target="view-inventory">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                            </svg>
+                            <span data-translate="nav_inventory">Fruit Inventory</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#" class="nav-link" data-target="view-inventory-update">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            <span data-translate="nav_inventory_update">Inventory Update</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#" class="nav-link" data-target="stock-history-view">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span data-translate="nav_stock_history">Stock History</span>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="/daily-sales" class="nav-link" data-external="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                            <span>Daily Sales Report</span>
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+
+            <!-- Language Switcher in Sidebar Footer -->
+            <div class="sidebar-footer">
+                <div class="lang-switch">
+                    <button class="lang-btn active" id="btn-lang-en">ENGLISH</button>
+                    <button class="lang-btn" id="btn-lang-ta">தமிழ்</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Viewport -->
+        <main class="main-wrapper">
+            
+            <!-- Top Navigation / Search / Profile -->
+            <header class="top-navbar">
+                <!-- Search bar -->
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="navbar-search" data-translate-placeholder="search_placeholder" placeholder="Search fruit varieties, inventory, analytics...">
+                </div>
+
+                <!-- Navbar controls -->
+                <div class="navbar-right">
+                    <!-- Real time Chennai/India Clock -->
+                    <div class="nav-clock" id="live-clock">28 May 2026 | <span>11:30:00 AM</span> IST</div>
+
+                    <!-- Glowing Database Connection Badge -->
+                    <div class="nav-clock db-status-pill" id="db-status-badge">
+                        <span class="db-status-dot"></span>
+                        <span class="db-status-text" id="db-status-text" data-translate="db_status_offline">DB OFFLINE</span>
+                    </div>
+
+                    <!-- User Profile drop -->
+                    <div class="user-profile">
+                        <div class="avatar">SF</div>
+                        <div class="user-info">
+                            <span class="user-name">SK Fruits</span>
+                            <span class="user-role" data-translate="brand_subtitle">Chennai, TN</span>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <button class="icon-btn" id="btn-logout" title="Logout" style="margin-left: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <div id="view-dashboard" class="page-view">
+                <!-- Hero Analytics Cards Grid -->
+                <section class="metrics-grid">
+                <!-- Total Inventory Amount -->
+                <div class="glass-panel metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title" data-translate="card_total_inv_amt">Total Inventory Amt</span>
+                        <div class="metric-icon-box" style="color: var(--neon-purple)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                        </div>
+                    </div>
+                    <div class="metric-body">
+                        <span class="metric-value" id="metric-total-inv-amt">₹0</span>
+                    </div>
+                    <div class="metric-footer">
+                        <div style="height: 6px; border-radius: 3px; background: var(--neon-purple); width: 100%; box-shadow: 0 0 10px var(--neon-purple); margin-top: 8px;"></div>
+                        <span style="font-size:0.68rem; color:var(--text-secondary); display:block; margin-top:5px" data-translate="metric_asset_valuation">Asset Valuation</span>
+                    </div>
+                </div>
+
+                <!-- Gross Revenue / Sales -->
+                <div class="glass-panel metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title" data-translate="card_today_sales">Today's Gross Sales</span>
+                        <div class="metric-icon-box" style="color: var(--electric-blue)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                    </div>
+                    <div class="metric-body">
+                        <span class="metric-value" id="metric-today-sales">₹0</span>
+                        <span class="metric-trend trend-up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                            0%
+                        </span>
+                    </div>
+                    <div class="metric-footer">
+                        <div class="sparkline-container" id="sparkline-sales"></div>
+                        <span style="font-size:0.68rem; color:var(--text-secondary); display:block; margin-top:5px" data-translate="metric_sale_trend">vs yesterday</span>
+                    </div>
+                </div>
+
+                <!-- Net Profit -->
+                <div class="glass-panel metric-card">
+                    <div class="metric-header">
+                        <span class="metric-title" data-translate="card_net_profit">Net Retail Profit</span>
+                        <div class="metric-icon-box" style="color: var(--mango-gold)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                    </div>
+                    <div class="metric-body">
+                        <span class="metric-value" id="metric-net-profit">₹0</span>
+                        <span class="metric-trend trend-up">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                            0%
+                        </span>
+                    </div>
+                    <div class="metric-footer">
+                        <div class="sparkline-container" id="sparkline-profit"></div>
+                        <span style="font-size:0.68rem; color:var(--text-secondary); display:block; margin-top:5px" data-translate="metric_profit_trend">net gain margin</span>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Dashboard Center Layout (Charts & Recommendations) -->
+            <section class="dashboard-grid">
+                <!-- Interactive Analytics Charts Panel -->
+                <div class="glass-panel" id="revenue-panel" style="min-height: 350px;">
+                    <div class="card-title-bar">
+                        <span class="card-title" data-translate="card_today_sales">Today's Sales</span>
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass-panel" id="profit-panel" style="min-height: 350px;">
+                    <div class="card-title-bar">
+                        <span class="card-title" data-translate="card_net_profit">Net Retail Profit</span>
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="profitChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Live Operations Log -->
+                <div class="glass-panel" style="min-height: 350px;">
+                    <div class="card-title-bar">
+                        <span class="card-title" data-translate="title_recent_activity">Live Shop Operations Log</span>
+                    </div>
+                    <div id="activity-list" class="activity-feed" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
+                        <!-- Populated by app.js -->
+                    </div>
+                </div>
+
+            </section>
+            </div>
+
+            <!-- Inventory Update View (Integrated from Designs/stock_updater) -->
+            <div id="view-inventory-update" class="page-view" style="display: none;">
+                <section class="glass-panel" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <span class="card-title" data-translate="nav_inventory_update">Inventory Update</span>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Manage live stock levels with precision controls and instant synchronization.</p>
+                    </div>
+                    <div class="table-filter-tabs">
+                        <button class="filter-btn active" data-update-filter="all" data-translate="filter_all">All Varieties</button>
+                        <button class="filter-btn" data-update-filter="low" data-translate="filter_low">Low/Danger</button>
+                        <button class="filter-btn" data-update-filter="optimal" data-translate="filter_optimal">Optimal</button>
+                    </div>
+                </section>
+                <section id="inventory-update-list" class="space-y-md">
+                    <!-- Dynamically populated via renderInventoryUpdateView() in app.js -->
+                </section>
+            </div>
+
+            <div id="view-inventory" class="page-view" style="display: none;">
+            <!-- Fruit overview Cards (Mango, Banana, Apple, Watermelon) -->
+            <section class="fruit-cards-grid" id="fruit-cards-container">
+                <!-- Rendered dynamically by app.js with glass accents -->
+            </section>
+
+            <!-- Full Dynamic Inventory Directory Table -->
+            <section class="glass-panel table-panel" id="inventory-directory">
+                <div class="table-header-controls">
+                    <span class="card-title" data-translate="title_inventory_table">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        Regional Fruit Inventory Directory
+                    </span>
+                    
+                    <!-- Table filter tabs & actions -->
+                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                        <div class="table-filter-tabs">
+                            <button class="filter-btn active" data-filter="all" data-translate="filter_all">All Varieties</button>
+                            <button class="filter-btn" data-filter="low" data-translate="filter_low">Low/Danger</button>
+                            <button class="filter-btn" data-filter="optimal" data-translate="filter_optimal">Optimal</button>
+                        </div>
+                        
+                        <button class="table-action-btn" id="btn-open-add-modal">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span data-translate="btn_add_fruit">Add Custom Fruit</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-scroll-container">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th data-translate="th_fruit">Fruit Variety</th>
+                                <th data-translate="th_stock">Live Stock</th>
+                                <th data-translate="th_price">Retail Price</th>
+                                <th data-translate="th_status">Stock Status</th>
+                                <th data-translate="th_actions">Quick Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            </div>
+
+            <!-- Stock History View -->
+            <div id="stock-history-view" class="page-view" style="display: none;">
+                <section class="glass-panel" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <span class="card-title" data-translate="nav_stock_history">Stock History</span>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Audit every movement of your shop inventory.</p>
+                    </div>
+                    <div class="header-actions" style="display: flex; gap: 12px;">
+                        <button type="button" id="btn-download-excel" class="table-action-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="margin-right: 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            CSV
+                        </button>
+                        <button type="button" id="btn-print-report" class="table-action-btn" style="background: var(--electric-blue); border-color: var(--electric-blue);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="margin-right: 6px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            Print
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Summary Metrics Grid -->
+                <section class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_trans">Total Transactions</span>
+                        <span id="summary-total-trans" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px;">0</span>
+                    </div>
+                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_added">Stock Added Today</span>
+                        <span id="summary-added-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--neon-green);">0 kg</span>
+                    </div>
+                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_sales">Stock Sold Today</span>
+                        <span id="summary-sales-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--electric-blue);">0 kg</span>
+                    </div>
+                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_waste">Stock Wasted Today</span>
+                        <span id="summary-waste-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--apple-red);">0 kg</span>
+                    </div>
+                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_most">Most Updated Product</span>
+                        <span id="summary-most-updated" class="metric-value" style="font-size: 1.25rem; display: block; margin-top: 10px;">-</span>
+                    </div>
+                </section>
+
+                <div class="history-main-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                    <section class="glass-panel" style="padding: 0; overflow: hidden;">
+                        <div class="history-filters" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--glass-border); gap: 15px; flex-wrap: wrap;">
+                            <input type="text" id="history-search" class="form-input" style="max-width: 300px; margin: 0;" placeholder="Search product or user...">
+                            <select id="history-product-filter" class="form-input" style="max-width: 150px; margin: 0; background-color: #0a0a0a;">
+                                <option value="All" data-translate="filter_all">All Varieties</option>
+                            </select>
+                            <select id="history-action-filter" class="form-input" style="max-width: 150px; margin: 0; background-color: #0a0a0a;">
+                                <option value="All">All Types</option>
+                                <option value="Restock">Restock</option>
+                                <option value="Sale">Sale</option>
+                                <option value="Adjustment">Adjustment</option>
+                                <option value="Creation">Creation</option>
+                                <option value="Waste">Waste</option>
+                            </select>
+                        </div>
+                        <div class="table-scroll-container" style="max-height: 500px;">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th data-translate="th_date">Date & Time</th>
+                                        <th data-translate="th_fruit">Product</th>
+                                        <th data-translate="th_prev_stock">Previous</th>
+                                        <th data-translate="th_change">Change</th>
+                                        <th data-translate="th_new_stock">New Stock</th>
+                                        <th data-translate="th_action">Action Type</th>
+                                        <th data-translate="th_notes">Notes</th>
+                                        <th data-translate="th_user">Updated By</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="glass-panel history-timeline-panel">
+                        <h3 class="card-title" style="margin-bottom: 20px;">Activity Timeline</h3>
+                        <div id="history-timeline" style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- Populated via app.js -->
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- SIMULATION MODAL: SELL FRUIT -->
+    <div class="modal-overlay" id="modal-sell-variety">
+        <div class="modal-content">
+            <button class="modal-close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 class="modal-title" data-translate="modal_sell_title">Record Fresh Sale</h3>
+            
+            <form id="form-sell-fruit">
+                <input type="hidden" id="sell-fruit-id">
+                
+                <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 12px; border-radius:10px; border: 1px dashed var(--glass-border);">
+                    <span style="font-size:0.8rem; color:var(--text-secondary)" data-translate="th_fruit">Fruit Variety</span>
+                    <h4 id="sell-fruit-name" style="color:#ffffff; font-family:var(--font-heading); margin-top:2px;">-</h4>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="sell-qty" data-translate="lbl_sell_qty">Quantity to Sell (kg)</label>
+                    <input type="number" id="sell-qty" class="form-input" min="0" step="any" required>
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" class="modal-btn btn-cancel" data-translate="btn_cancel">Cancel</button>
+                    <button type="submit" class="modal-btn btn-confirm" data-translate="btn_confirm">Confirm Action</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SIMULATION MODAL: WASTE FRUIT -->
+    <div class="modal-overlay" id="modal-waste-variety">
+        <div class="modal-content">
+            <button class="modal-close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 class="modal-title" data-translate="modal_waste_title">Record Spoilage / Waste</h3>
+            
+            <form id="form-waste-fruit">
+                <input type="hidden" id="waste-fruit-id">
+                
+                <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 12px; border-radius:10px; border: 1px dashed var(--glass-border);">
+                    <span style="font-size:0.8rem; color:var(--text-secondary)" data-translate="th_fruit">Fruit Variety</span>
+                    <h4 id="waste-fruit-name" style="color:#ffffff; font-family:var(--font-heading); margin-top:2px;">-</h4>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="waste-qty" data-translate="lbl_waste_qty">Spoiled Quantity (kg)</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <button type="button" class="table-action-btn" style="padding: 4px 8px; font-size: 0.7rem;" onclick="calcWaste(5)">5%</button>
+                        <button type="button" class="table-action-btn" style="padding: 4px 8px; font-size: 0.7rem;" onclick="calcWaste(10)">10%</button>
+                        <button type="button" class="table-action-btn" style="padding: 4px 8px; font-size: 0.7rem;" onclick="calcWaste(20)">20%</button>
+                    </div>
+                    <input type="number" id="waste-qty" class="form-input" min="0" step="any" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="waste-reason">Reason</label>
+                    <input type="text" id="waste-reason" class="form-input" placeholder="e.g. Spoiled, Overripe">
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" class="modal-btn btn-cancel" data-translate="btn_cancel">Cancel</button>
+                    <button type="submit" class="modal-btn btn-confirm" data-translate="btn_confirm">Confirm Action</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SIMULATION MODAL: RESTOCK FRUIT -->
+    <div class="modal-overlay" id="modal-restock-variety">
+        <div class="modal-content">
+            <button class="modal-close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 class="modal-title" data-translate="modal_restock_title">Replenish Inventory</h3>
+            
+            <form id="form-restock-fruit">
+                <input type="hidden" id="restock-fruit-id">
+                
+                <div style="margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 12px; border-radius:10px; border: 1px dashed var(--glass-border);">
+                    <span style="font-size:0.8rem; color:var(--text-secondary)" data-translate="th_fruit">Fruit Variety</span>
+                    <h4 id="restock-fruit-name" style="color:#ffffff; font-family:var(--font-heading); margin-top:2px;">-</h4>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="restock-qty" data-translate="lbl_restock_qty">Quantity to Add (kg)</label>
+                    <input type="number" id="restock-qty" class="form-input" min="0" step="any" required>
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" class="modal-btn btn-cancel" data-translate="btn_cancel">Cancel</button>
+                    <button type="submit" class="modal-btn btn-confirm" data-translate="btn_confirm">Confirm Action</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PREMIUM MODAL: EDIT FRUIT VARIETY -->
+    <div class="modal-overlay" id="modal-edit-variety">
+        <div class="modal-content" style="max-width: 580px;">
+            <button class="modal-close" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <!-- Header -->
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 28px;">
+                <div class="modal-header-icon blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--electric-blue)" stroke-width="2" width="24" height="24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="modal-title" data-translate="modal_edit_title">Edit Fruit Variety</h3>
+                    <p class="modal-subtitle">Update variety details in the regional inventory</p>
+                </div>
+            </div>
+
+            <form id="form-edit-fruit">
+                <input type="hidden" id="edit-fruit-id">
+
+                <!-- Identity Section -->
+                <div class="form-section-label">Variety Identity</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-name-en" data-translate="lbl_fruit_name_en">English Name</label>
+                        <input type="text" id="edit-name-en" class="form-input" placeholder="e.g. Salem Mango" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-name-ta" data-translate="lbl_fruit_name_ta">Tamil Name</label>
+                        <input type="text" id="edit-name-ta" class="form-input" placeholder="எ.கா. மாம்பழம்" required>
+                    </div>
+                </div>
+
+                <!-- Stock Section -->
+                <div class="form-section-label">Stock Configuration</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-stock" data-translate="lbl_initial_stock">Live Stock</label>
+                        <div class="form-input-wrapper">
+                            <span class="form-input-prefix">kg</span>
+                            <input type="number" id="edit-stock" class="form-input" min="0" step="any" placeholder="450" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Section -->
+                <div class="form-section-label">Pricing & Alerts</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 8px;">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-threshold" data-translate="lbl_threshold">Alert Min</label>
+                        <div class="form-input-wrapper">
+                            <span class="form-input-prefix">kg</span>
+                            <input type="number" id="edit-threshold" class="form-input" min="0" step="any" placeholder="50" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-cost" data-translate="lbl_cost_price">Cost Price</label>
+                        <div class="form-input-wrapper">
+                            <span class="form-input-prefix">₹</span>
+                            <input type="number" id="edit-cost" class="form-input" min="0" step="any" placeholder="120" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-price" data-translate="lbl_selling_price">Retail Price</label>
+                        <div class="form-input-wrapper">
+                            <span class="form-input-prefix">₹</span>
+                            <input type="number" id="edit-price" class="form-input" min="0" step="any" placeholder="180" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" class="modal-btn btn-cancel" data-translate="btn_cancel">Cancel</button>
+                    <button type="submit" class="modal-btn btn-confirm">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14" style="margin-right:6px; vertical-align:middle;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SIMULATION MODAL: ADD CUSTOM FRUIT VARIETY -->
+    <div class="modal-overlay" id="modal-add-variety">
+        <div class="modal-content" style="max-width: 640px; padding: 32px;">
+            <button class="modal-close">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(139, 92, 246, 0.3);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--neon-purple)" stroke-width="2.5" width="24" height="24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </div>
+                <h3 class="modal-title" style="margin: 0; font-size: 1.5rem;" data-translate="modal_add_title">Register Custom Fruit Variety</h3>
+            </div>
+            
+            <form id="form-add-fruit">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="add-name-en" data-translate="lbl_fruit_name_en">Variety Name (English)</label>
+                        <input type="text" id="add-name-en" class="form-input" placeholder="e.g. Panruti Jackfruit" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="add-name-ta" data-translate="lbl_fruit_name_ta">Variety Name (Tamil)</label>
+                        <input type="text" id="add-name-ta" class="form-input" placeholder="எ.கா. பலாப்பழம்" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 32px;">
+                    <div class="form-group">
+                        <label class="form-label" for="add-threshold" data-translate="lbl_threshold">Alert Min (kg)</label>
+                        <input type="number" id="add-threshold" class="form-input" min="0" step="any" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="add-cost" data-translate="lbl_cost_price">Cost Price (₹/kg)</label>
+                        <input type="number" id="add-cost" class="form-input" min="0" step="any" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="add-price" data-translate="lbl_selling_price">Selling Price (₹/kg)</label>
+                        <input type="number" id="add-price" class="form-input" min="0" step="any" value="0" required>
+                    </div>
+                </div>
+
+                <div class="modal-btn-row">
+                    <button type="button" class="modal-btn btn-cancel" data-translate="btn_cancel">Cancel</button>
+                    <button type="submit" class="modal-btn btn-confirm" data-translate="btn_confirm">Confirm Action</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Engine Scripts -->
+    <script src="particles.js"></script>
+    <script src="app.js"></script>
+
+</body>
+</html>
