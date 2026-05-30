@@ -405,17 +405,17 @@ function DailySalesReport() {
 
   return (
     <div className="max-w-[1500px] mx-auto">
-      <div className="no-print mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="no-print mb-6 flex flex-col gap-4">
         <div>
           <p className="text-sm text-emerald-300 uppercase tracking-[0.3em]">Daily report</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Daily Sales Report</h1>
-          <p className="mt-2 text-sm text-slate-400 max-w-2xl">Track sold quantities, remaining stock, and update inventory automatically at the end of each day.</p>
+          <h1 className="mt-2 text-2xl font-semibold text-white leading-tight">Daily Sales Report</h1>
+          <p className="mt-2 text-sm text-slate-400">Track sold quantities, remaining stock, and update inventory at the end of each day.</p>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-          <button onClick={handlePrint} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto">
+        <div className="flex w-full flex-col gap-3 sm:flex-row">
+          <button onClick={handlePrint} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
             <span className="text-lg">📄</span> Print Report
           </button>
-          <button onClick={downloadCSV} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 sm:w-auto">
+          <button onClick={downloadCSV} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400">
             <span className="text-lg">📥</span> Export CSV
           </button>
         </div>
@@ -482,17 +482,17 @@ function DailySalesReport() {
         </div>
       </div>
 
-      <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10 mb-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="glass-panel rounded-3xl border border-white/10 p-4 shadow-2xl shadow-slate-950/10 mb-4" style={{padding: '20px 16px'}}>
+        <div className="flex flex-col gap-4">
           <div>
             <p className="text-base font-semibold text-white">Sales Input Table</p>
             <p className="mt-1 text-sm text-slate-400">Update sold quantities for each fruit and preview revenue instantly.</p>
           </div>
-          <div className="flex w-full flex-col gap-3 no-print lg:w-auto lg:flex-row">
-            <button onClick={handleSaveReport} disabled={saving} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-fruitgreen px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto">
+          <div className="flex w-full flex-col gap-3 no-print">
+            <button onClick={handleSaveReport} disabled={saving} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-fruitgreen px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60">
               <span className="text-lg">📝</span> {saving ? 'Saving...' : 'Save Today\'s Sales'}
             </button>
-            <button onClick={downloadCSV} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-slate-800 lg:w-auto">
+            <button onClick={downloadCSV} className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-slate-800">
               <span className="text-lg">📥</span> Export CSV
             </button>
           </div>
@@ -588,29 +588,37 @@ function DailySalesReport() {
         </div>
       </div>
 
-      <div id="daily-sales-range-section" className="no-print glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div id="daily-sales-range-section" className="no-print glass-panel rounded-3xl border border-white/10 shadow-2xl shadow-slate-950/10" style={{padding: '20px 16px'}}>
+        <div className="flex flex-col gap-3">
           <div>
             <p className="text-base font-semibold text-white">Recent Sales Reports</p>
             <p className="mt-1 text-sm text-slate-400">Latest sale entries and remaining stock snapshots from today.</p>
           </div>
-          <div className="no-print flex items-center gap-3 text-slate-400">
-                <span className="text-lg">📝</span> <span>{todayLabel}</span>
+          <div className="no-print flex items-center gap-2 text-slate-400 text-sm">
+            <span className="text-base">📝</span> <span>{todayLabel}</span>
           </div>
         </div>
 
-            <div className="no-print mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-              <label className="text-sm text-slate-400">From:</label>
-              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full sm:w-auto rounded-md bg-slate-900 px-3 py-3 text-base sm:text-sm text-white min-h-[48px]" />
-              <label className="text-sm text-slate-400">To:</label>
-              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full sm:w-auto rounded-md bg-slate-900 px-3 py-3 text-base sm:text-sm text-white min-h-[48px]" />
-              <button onClick={() => loadHistoryForRange(fromDate, toDate)} disabled={rangeLoading} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:border-slate-500 min-h-[48px]">
-                {rangeLoading ? 'Loading...' : 'Load Report'}
-              </button>
-              <button onClick={() => handlePrintRange()} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 min-h-[48px]">
-                📄 Print Range
-              </button>
+        <div className="no-print mt-4 flex flex-col gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">From</label>
+              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-3 text-base text-white min-h-[52px]" />
             </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">To</label>
+              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-3 text-base text-white min-h-[52px]" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => loadHistoryForRange(fromDate, toDate)} disabled={rangeLoading} className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:border-slate-500 min-h-[52px] w-full">
+              {rangeLoading ? 'Loading...' : 'Load Report'}
+            </button>
+            <button onClick={() => handlePrintRange()} className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 min-h-[52px] w-full">
+              📄 Print Range
+            </button>
+          </div>
+        </div>
 
         <div className="sales-mobile-cards no-print mt-6 space-y-3 md:hidden">
           {history.length === 0 ? (
