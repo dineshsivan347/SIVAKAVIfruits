@@ -456,12 +456,47 @@ function bindDOMEvents() {
 
     // Mobile Sidebar Toggle
     const mobileToggle = document.getElementById('mobile-toggle');
-    if (mobileToggle) {
-        mobileToggle.addEventListener('click', () => {
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) sidebar.classList.toggle('mobile-open');
+    const sidebar = document.querySelector('.sidebar');
+
+    function setSidebarOpen(open) {
+        if (!sidebar) return;
+        sidebar.classList.toggle('mobile-open', open);
+        document.body.classList.toggle('sidebar-open', open);
+    }
+
+    if (mobileToggle && sidebar) {
+        mobileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setSidebarOpen(!sidebar.classList.contains('mobile-open'));
+        });
+
+        document.body.addEventListener('click', (e) => {
+            if (!sidebar.classList.contains('mobile-open')) return;
+            if (sidebar.contains(e.target) || mobileToggle.contains(e.target)) return;
+            setSidebarOpen(false);
+        });
+
+        document.querySelectorAll('.sidebar .nav-link').forEach((link) => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) setSidebarOpen(false);
+            });
         });
     }
+
+    let chartResizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(chartResizeTimer);
+        chartResizeTimer = setTimeout(() => {
+            if (AppState.charts.revenue) {
+                AppState.charts.revenue.options = chartOptionsBase(true);
+                AppState.charts.revenue.update();
+            }
+            if (AppState.charts.profit) {
+                AppState.charts.profit.options = chartOptionsBase(false);
+                AppState.charts.profit.update();
+            }
+        }, 250);
+    });
 
     // Delegated event listener for dynamically generated row buttons
     const inventoryTableBody = document.getElementById('inventory-table-body');
@@ -649,9 +684,10 @@ function renderInventoryTable(query = '', filter = 'all') {
             strokeColor = 'var(--mango-gold)';
         }
         
+        const t = Translations[AppState.language];
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>
+            <td data-label="${t.th_fruit}">
                 <div class="table-fruit-item">
                     <div class="table-fruit-img">${emoji}</div>
                     <div class="table-fruit-details">
@@ -659,18 +695,18 @@ function renderInventoryTable(query = '', filter = 'all') {
                     </div>
                 </div>
             </td>
-            <td>
-                <div style="display: flex; flex-direction: column; width: 180px;">
-                    <span style="color: #fff; font-weight: 700; font-size: 1.1rem;">${f.stock.toFixed(2)} Kg</span>
+            <td data-label="${t.th_stock}">
+                <div class="table-stock-cell">
+                    <span class="table-stock-value">${f.stock.toFixed(2)} Kg</span>
                 </div>
             </td>
-            <td style="font-family: var(--font-heading); font-weight:600; color:#fff">
-                ₹${f.price} <span style="font-size:0.7rem; color:var(--text-secondary)">/ ${unit}</span>
+            <td data-label="${t.th_price}" class="table-price-cell">
+                ₹${f.price} <span class="table-price-unit">/ ${unit}</span>
             </td>
-            <td>
+            <td data-label="${t.th_status}">
                 <span class="stock-badge ${statusClass}">${status}</span>
             </td>
-            <td>
+            <td data-label="${t.th_actions}" class="table-actions-cell">
                 <div class="action-row-btns">
                     <button class="row-btn btn-sell" title="Record Sale" data-id="${f.id}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
@@ -910,10 +946,27 @@ function renderHistoryMetrics(m) {
     updateText('summary-most-updated', AppState.language === 'en' ? m.mostUpdatedEn : m.mostUpdatedTa);
 }
 
+function printReportArea(onBeforePrint) {
+    if (typeof onBeforePrint === 'function') {
+        onBeforePrint();
+    }
+
+    document.body.classList.add('is-printing-report');
+
+    const cleanup = () => {
+        document.body.classList.remove('is-printing-report');
+    };
+
+    window.addEventListener('afterprint', cleanup, { once: true });
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => window.print());
+    });
+}
+
 function printStockHistoryReport() {
     const view = document.getElementById('stock-history-view');
     if (!view) {
-        window.print();
+        printReportArea();
         return;
     }
 
@@ -921,19 +974,20 @@ function printStockHistoryReport() {
     if (wasHidden) {
         view.style.display = 'block';
         fetchStockHistory();
+    } else {
+        view.style.display = 'block';
     }
 
-    document.body.classList.add('print-stock-history');
-
-    const cleanup = () => {
-        document.body.classList.remove('print-stock-history');
-        if (wasHidden) view.style.display = 'none';
-    };
-
-    window.addEventListener('afterprint', cleanup, { once: true });
-    requestAnimationFrame(() => {
-        requestAnimationFrame(() => window.print());
+    printReportArea(() => {
+        const dateEl = document.getElementById('stock-history-print-date');
+        if (dateEl) {
+            dateEl.textContent = `Generated: ${new Date().toLocaleString('en-IN')}`;
+        }
     });
+
+    window.addEventListener('afterprint', () => {
+        if (wasHidden) view.style.display = 'none';
+    }, { once: true });
 }
 
 async function downloadStockHistoryCSV() {
@@ -1126,9 +1180,16 @@ function initCharts() {
 
 // Base configuration for charts
 function chartOptionsBase(showGridX = false) {
+    const isMobile = window.innerWidth <= 768;
+    const tickSize = isMobile ? 12 : 10;
+    const tickPadding = isMobile ? 8 : 4;
+
     return {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: isMobile ? { left: 4, right: 8, top: 4, bottom: 0 } : 0
+        },
         plugins: {
             legend: { display: false },
             tooltip: {
@@ -1137,19 +1198,33 @@ function chartOptionsBase(showGridX = false) {
                 bodyColor: '#e5e7eb',
                 borderColor: 'rgba(255, 255, 255, 0.1)',
                 borderWidth: 1,
-                padding: 10,
+                padding: isMobile ? 12 : 10,
                 cornerRadius: 8,
-                bodyFont: { family: 'Inter' }
+                bodyFont: { family: 'Inter', size: isMobile ? 13 : 12 },
+                titleFont: { family: 'Inter', size: isMobile ? 14 : 12 }
             }
         },
         scales: {
             y: {
-                grid: { color: 'rgba(255, 255, 255, 0.04)' },
-                ticks: { color: '#6b7280', font: { family: 'Inter', size: 10 } }
+                grid: { color: 'rgba(255, 255, 255, 0.06)' },
+                ticks: {
+                    color: isMobile ? '#9ca3af' : '#6b7280',
+                    font: { family: 'Inter', size: tickSize },
+                    padding: tickPadding,
+                    maxTicksLimit: isMobile ? 5 : 8
+                }
             },
             x: {
                 grid: { display: showGridX, color: 'rgba(255, 255, 255, 0.04)' },
-                ticks: { color: '#6b7280', font: { family: 'Inter', size: 10 } }
+                ticks: {
+                    color: isMobile ? '#9ca3af' : '#6b7280',
+                    font: { family: 'Inter', size: tickSize },
+                    padding: tickPadding,
+                    maxRotation: isMobile ? 0 : 45,
+                    minRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: isMobile ? 6 : 10
+                }
             }
         }
     };
@@ -1774,17 +1849,17 @@ function renderRecentActivity() {
         item.className = 'activity-item';
         item.style.borderLeft = `3px solid ${color}`;
         item.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <span style="font-size: 1.2rem;">${icon}</span>
-                    <div>
-                        <div style="font-weight: 600; color: #fff; font-size: 0.9rem;">${fruitName}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${typeLabel}: ${act.qty} kg</div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                <div style="display: flex; gap: 12px; align-items: center; min-width: 0;">
+                    <span style="font-size: 1.2rem; flex-shrink: 0;">${icon}</span>
+                    <div style="min-width: 0;">
+                        <div class="activity-item-title" style="font-weight: 600; color: #fff; font-size: 0.9rem;">${fruitName}</div>
+                        <div class="activity-item-sub" style="font-size: 0.75rem; color: var(--text-secondary);">${typeLabel}: ${act.qty} kg</div>
                     </div>
                 </div>
-                <div style="text-align: right;">
-                    <div style="font-size: 0.7rem; color: var(--text-secondary);">${time}</div>
-                    ${act.value > 0 ? `<div style="font-weight: 700; color: ${color}; font-size: 0.85rem;">₹${act.value}</div>` : ''}
+                <div style="text-align: right; flex-shrink: 0;">
+                    <div class="activity-item-time" style="font-size: 0.7rem; color: var(--text-secondary);">${time}</div>
+                    ${act.value > 0 ? `<div class="activity-item-value" style="font-weight: 700; color: ${color}; font-size: 0.85rem;">₹${act.value}</div>` : ''}
                 </div>
             </div>
         `;

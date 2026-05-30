@@ -16,6 +16,55 @@ const formatCurrency = (value) => `₹${Number(value || 0).toLocaleString('en-IN
 const formatUnits = (value) => `${Number(value || 0).toFixed(2)} kg`;
 const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
 
+function triggerReportPrint(onBeforePrint) {
+  if (typeof onBeforePrint === 'function') {
+    onBeforePrint();
+  }
+  document.body.classList.add('is-printing-report');
+  window.addEventListener('afterprint', () => {
+    document.body.classList.remove('is-printing-report');
+  }, { once: true });
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => window.print());
+  });
+}
+
+function SoldQuantityInput({ row, onAdjust, onChange, compact = false }) {
+  return (
+    <>
+      <span className="print-only-value">{Number(row.soldToday || 0).toFixed(2)} kg</span>
+      <div className={`no-print print-hide-controls flex w-full items-center gap-2 rounded-2xl border border-slate-700 bg-slate-950/90 p-1${compact ? ' md:max-w-[220px]' : ''}`}>
+        <button
+          type="button"
+          onClick={() => onAdjust(row.productId, -1)}
+          className="print-hidden inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-800 text-lg text-slate-200 transition hover:bg-slate-700"
+          aria-label="Decrease quantity"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          min="0"
+          max={row.currentStock}
+          step="any"
+          value={row.soldToday}
+          onChange={(e) => onChange(row.productId, e.target.value)}
+          className="h-11 min-w-0 flex-1 rounded-2xl border border-transparent bg-transparent px-2 text-center text-base text-white outline-none focus:border-fruitgreen focus:ring-2 focus:ring-fruitgreen/20"
+        />
+        <button
+          type="button"
+          onClick={() => onAdjust(row.productId, 1)}
+          className="print-hidden inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-800 text-lg text-slate-200 transition hover:bg-slate-700"
+          aria-label="Increase quantity"
+        >
+          +
+        </button>
+      </div>
+      {row.error && <p className="mt-2 text-xs text-red-300">{row.error}</p>}
+    </>
+  );
+}
+
 function DailySalesReport() {
   const [inventory, setInventory] = useState([]);
   const [rows, setRows] = useState([]);
@@ -320,44 +369,69 @@ function DailySalesReport() {
 
 
   const handlePrint = () => {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => window.print());
+    const rangeSection = document.getElementById('daily-sales-range-section');
+    if (rangeSection) rangeSection.classList.add('no-print');
+    triggerReportPrint(() => {
+      const meta = document.getElementById('daily-sales-print-meta');
+      if (meta) {
+        meta.textContent = `Report Date: ${todayLabel} | Generated: ${new Date().toLocaleString('en-IN')}`;
+      }
     });
   };
 
   const handlePrintRange = async () => {
     if (fromDate || toDate) {
       await loadHistoryForRange(fromDate, toDate);
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
     }
     setReportMode('range');
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => window.print());
+    const rangeSection = document.getElementById('daily-sales-range-section');
+    if (rangeSection) rangeSection.classList.remove('no-print');
+    triggerReportPrint(() => {
+      const meta = document.getElementById('daily-sales-print-meta');
+      if (meta) {
+        const rangeLabel = fromDate && toDate
+          ? `${fromDate} to ${toDate}`
+          : fromDate || toDate || todayLabel;
+        meta.textContent = `Period: ${rangeLabel} | Generated: ${new Date().toLocaleString('en-IN')}`;
+      }
     });
+    window.addEventListener('afterprint', () => {
+      if (rangeSection) rangeSection.classList.add('no-print');
+    }, { once: true });
   };
 
   return (
-    <div className="max-w-[1500px] mx-auto daily-sales-print-root">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-6">
+    <div className="max-w-[1500px] mx-auto">
+      <div className="no-print mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm text-emerald-300 uppercase tracking-[0.3em]">Daily report</p>
           <h1 className="mt-2 text-3xl font-semibold text-white">Daily Sales Report</h1>
           <p className="mt-2 text-sm text-slate-400 max-w-2xl">Track sold quantities, remaining stock, and update inventory automatically at the end of each day.</p>
         </div>
-        <div className="flex flex-wrap gap-3 print-hidden">
-          <button onClick={handlePrint} className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <button onClick={handlePrint} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto">
             <span className="text-lg">📄</span> Print Report
           </button>
-          <button onClick={downloadCSV} className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400">
+          <button onClick={downloadCSV} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 sm:w-auto">
             <span className="text-lg">📥</span> Export CSV
           </button>
         </div>
       </div>
 
+      <div id="report-print-area">
+        <div className="report-print-header">
+          <h1 className="report-print-title">SK Fruits — Daily Sales Report</h1>
+          <p className="report-print-meta" id="daily-sales-print-meta"></p>
+        </div>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-6">
         <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10">
           <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Today&apos;s Sales Value</p>
           <div className="mt-4 flex items-center gap-3">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-200">
+            <div className="no-print inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-200">
               <span className="text-lg">↑</span>
             </div>
             <div>
@@ -373,7 +447,7 @@ function DailySalesReport() {
         <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10">
           <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Total Quantity Sold</p>
           <div className="mt-4 flex items-center gap-3">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700/60 text-slate-100">
+            <div className="no-print inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700/60 text-slate-100">
               <span className="text-lg">📦</span>
             </div>
             <div>
@@ -385,7 +459,7 @@ function DailySalesReport() {
         <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10">
           <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Remaining Inventory</p>
           <div className="mt-4 flex items-center gap-3">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-200">
+            <div className="no-print inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-200">
               <span className="text-lg">↗</span>
             </div>
             <div>
@@ -397,7 +471,7 @@ function DailySalesReport() {
         <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10">
           <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Best Selling Fruit</p>
           <div className="mt-4 flex items-center gap-3">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-200">
+            <div className="no-print inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-200">
               <span className="text-lg">✔️</span>
             </div>
             <div>
@@ -414,37 +488,77 @@ function DailySalesReport() {
             <p className="text-base font-semibold text-white">Sales Input Table</p>
             <p className="mt-1 text-sm text-slate-400">Update sold quantities for each fruit and preview revenue instantly.</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 print-hidden">
-            <button onClick={handleSaveReport} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-fruitgreen px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60">
+          <div className="flex w-full flex-col gap-3 no-print lg:w-auto lg:flex-row">
+            <button onClick={handleSaveReport} disabled={saving} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-fruitgreen px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto">
               <span className="text-lg">📝</span> {saving ? 'Saving...' : 'Save Today\'s Sales'}
             </button>
-            <button onClick={downloadCSV} className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-slate-800">
+            <button onClick={downloadCSV} className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-slate-800 lg:w-auto">
               <span className="text-lg">📥</span> Export CSV
             </button>
           </div>
         </div>
 
         {errorMessage && (
-          <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
+          <div className="no-print mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
             <span className="inline text-base align-middle">⚠️</span> <span>{errorMessage}</span>
           </div>
         )}
         {statusMessage && (
-          <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-100">
+          <div className="no-print mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-100">
             <span>{statusMessage}</span>
           </div>
         )}
 
-        <div className="mt-6 table-scroll">
-          <table className="min-w-full border-separate border-spacing-0 text-left text-sm text-slate-300">
+        {/* Mobile: stacked cards with full-width controls */}
+        <div className="sales-mobile-cards no-print mt-6 space-y-3 md:hidden">
+          {loading ? (
+            <p className="py-6 text-center text-slate-400">Loading inventory data...</p>
+          ) : rows.length === 0 ? (
+            <p className="py-6 text-center text-slate-400">No products available.</p>
+          ) : rows.map((row) => (
+            <div key={row.productId} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="text-lg font-semibold text-white">{row.productName}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Current Stock</p>
+                  <p className="mt-1 whitespace-nowrap font-medium text-white">{formatUnits(row.currentStock)}</p>
+                </div>
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Selling Price</p>
+                  <p className="mt-1 font-medium text-white">{formatCurrency(row.sellingPrice)}</p>
+                </div>
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Sales Value</p>
+                  <p className="mt-1 font-medium text-white">{formatCurrency(row.salesValue)}</p>
+                </div>
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Remaining</p>
+                  <p className="mt-1 whitespace-nowrap font-medium text-white">{formatUnits(row.remainingStock)}</p>
+                </div>
+              </div>
+              <div className="mt-4 border-t border-white/5 pt-4">
+                <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Sold Today</p>
+                <SoldQuantityInput
+                  row={row}
+                  onAdjust={handleQuantityAdjust}
+                  onChange={handleQuantityChange}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: full table */}
+        <div className="sales-desktop-table mt-6 hidden table-scroll overflow-x-auto md:block">
+          <table className="w-full border-separate border-spacing-0 text-left text-sm text-slate-300">
             <thead className="bg-slate-950/90 text-slate-400">
               <tr>
-                <th className="px-4 py-4 rounded-tl-3xl">Fruit Name</th>
+                <th className="rounded-tl-3xl px-4 py-4">Fruit Name</th>
                 <th className="px-4 py-4">Current Stock</th>
                 <th className="px-4 py-4">Selling Price</th>
                 <th className="px-4 py-4">Sold Today</th>
                 <th className="px-4 py-4">Sales Value</th>
-                <th className="px-4 py-4 rounded-tr-3xl">Remaining Stock</th>
+                <th className="rounded-tr-3xl px-4 py-4">Remaining Stock</th>
               </tr>
             </thead>
             <tbody>
@@ -455,40 +569,18 @@ function DailySalesReport() {
               ) : rows.map((row) => (
                 <tr key={row.productId} className="border-t border-white/5 hover:bg-white/5">
                   <td className="px-4 py-4 font-medium text-white">{row.productName}</td>
-                  <td className="px-4 py-4">{formatUnits(row.currentStock)}</td>
+                  <td className="whitespace-nowrap px-4 py-4">{formatUnits(row.currentStock)}</td>
                   <td className="px-4 py-4">{formatCurrency(row.sellingPrice)}</td>
                   <td className="px-4 py-4">
-                    <div className="print-hide-controls flex items-center gap-2 max-w-[220px] rounded-2xl border border-slate-700 bg-slate-950/90 p-1">
-                      <button
-                        type="button"
-                        onClick={() => handleQuantityAdjust(row.productId, -1)}
-                        className="print-hidden inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-800 text-slate-200 transition hover:bg-slate-700"
-                        aria-label="Decrease quantity"
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        min="0"
-                        max={row.currentStock}
-                        step="any"
-                        value={row.soldToday}
-                        onChange={(e) => handleQuantityChange(row.productId, e.target.value)}
-                        className="h-10 flex-1 min-w-[56px] rounded-2xl border border-transparent bg-transparent px-3 text-right text-white outline-none focus:border-fruitgreen focus:ring-2 focus:ring-fruitgreen/20"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleQuantityAdjust(row.productId, 1)}
-                        className="print-hidden inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-800 text-slate-200 transition hover:bg-slate-700"
-                        aria-label="Increase quantity"
-                      >
-                        +
-                      </button>
-                    </div>
-                    {row.error && <p className="mt-2 text-xs text-red-300">{row.error}</p>}
+                    <SoldQuantityInput
+                      row={row}
+                      onAdjust={handleQuantityAdjust}
+                      onChange={handleQuantityChange}
+                      compact
+                    />
                   </td>
                   <td className="px-4 py-4 text-white">{formatCurrency(row.salesValue)}</td>
-                  <td className="px-4 py-4 text-white">{formatUnits(row.remainingStock)}</td>
+                  <td className="whitespace-nowrap px-4 py-4 text-white">{formatUnits(row.remainingStock)}</td>
                 </tr>
               ))}
             </tbody>
@@ -496,32 +588,57 @@ function DailySalesReport() {
         </div>
       </div>
 
-      <div className="glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10">
+      <div id="daily-sales-range-section" className="no-print glass-panel rounded-3xl border border-white/10 p-6 shadow-2xl shadow-slate-950/10">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-base font-semibold text-white">Recent Sales Reports</p>
             <p className="mt-1 text-sm text-slate-400">Latest sale entries and remaining stock snapshots from today.</p>
           </div>
-          <div className="flex items-center gap-3 text-slate-400 print-hidden">
+          <div className="no-print flex items-center gap-3 text-slate-400">
                 <span className="text-lg">📝</span> <span>{todayLabel}</span>
           </div>
         </div>
 
-            <div className="mt-4 flex items-center gap-3 print-hidden">
+            <div className="no-print mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <label className="text-sm text-slate-400">From:</label>
-              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white" />
+              <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full sm:w-auto rounded-md bg-slate-900 px-3 py-3 text-base sm:text-sm text-white min-h-[48px]" />
               <label className="text-sm text-slate-400">To:</label>
-              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white" />
-              <button onClick={() => loadHistoryForRange(fromDate, toDate)} disabled={rangeLoading} className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:border-slate-500">
+              <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-full sm:w-auto rounded-md bg-slate-900 px-3 py-3 text-base sm:text-sm text-white min-h-[48px]" />
+              <button onClick={() => loadHistoryForRange(fromDate, toDate)} disabled={rangeLoading} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:border-slate-500 min-h-[48px]">
                 {rangeLoading ? 'Loading...' : 'Load Report'}
               </button>
-              <button onClick={() => handlePrintRange()} className="inline-flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400">
+              <button onClick={() => handlePrintRange()} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 min-h-[48px]">
                 📄 Print Range
               </button>
             </div>
 
-            <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full text-left text-sm text-slate-300">
+        <div className="sales-mobile-cards no-print mt-6 space-y-3 md:hidden">
+          {history.length === 0 ? (
+            <p className="py-6 text-center text-slate-400">No sales history available yet.</p>
+          ) : history.map((item) => (
+            <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+              <p className="font-semibold text-white">{item.fruitEn}</p>
+              <p className="mt-1 text-sm text-slate-400">{new Date(item.createdAt).toLocaleString('en-IN')}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Quantity Sold</p>
+                  <p className="mt-1 whitespace-nowrap font-medium text-white">{formatUnits(item.reducedQuantity || item.qty)}</p>
+                </div>
+                <div>
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Sales Value</p>
+                  <p className="mt-1 font-medium text-white">{formatCurrency(item.value)}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">Remaining Stock</p>
+                  <p className="mt-1 whitespace-nowrap font-medium text-white">{formatUnits(item.updatedStock)}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="sales-desktop-table mt-6 hidden overflow-x-auto md:block">
+          <table className="w-full text-left text-sm text-slate-300">
             <thead className="bg-slate-950/90 text-slate-400">
               <tr>
                 <th className="px-4 py-4">Date</th>
@@ -538,14 +655,15 @@ function DailySalesReport() {
                 <tr key={item.id} className="border-t border-white/5 hover:bg-white/5">
                   <td className="px-4 py-4">{new Date(item.createdAt).toLocaleString('en-IN')}</td>
                   <td className="px-4 py-4">{item.fruitEn}</td>
-                  <td className="px-4 py-4">{formatUnits(item.reducedQuantity || item.qty)}</td>
+                  <td className="whitespace-nowrap px-4 py-4">{formatUnits(item.reducedQuantity || item.qty)}</td>
                   <td className="px-4 py-4">{formatCurrency(item.value)}</td>
-                  <td className="px-4 py-4">{formatUnits(item.updatedStock)}</td>
+                  <td className="whitespace-nowrap px-4 py-4">{formatUnits(item.updatedStock)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );

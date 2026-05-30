@@ -10,13 +10,6 @@
     
     <!-- ChartJS library via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @media (max-width: 768px) {
-            .history-main-grid {
-                grid-template-columns: 1fr !important; /* Stack columns on smaller screens */
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -28,7 +21,7 @@
     <div class="app-container">
         
         <!-- Collapsible Mobile Menu Toggle -->
-        <div class="menu-toggle" id="mobile-toggle">
+        <div class="menu-toggle no-print" id="mobile-toggle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -37,7 +30,7 @@
         </div>
 
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <aside class="sidebar no-print">
             <div class="logo-container">
                 <div class="logo-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" width="24" height="24">
@@ -116,7 +109,7 @@
         <main class="main-wrapper">
             
             <!-- Top Navigation / Search / Profile -->
-            <header class="top-navbar">
+            <header class="top-navbar no-print">
                 <!-- Search bar -->
                 <div class="search-bar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -131,29 +124,31 @@
                     <!-- Real time Chennai/India Clock -->
                     <div class="nav-clock" id="live-clock">28 May 2026 | <span>11:30:00 AM</span> IST</div>
 
-                    <!-- Glowing Database Connection Badge -->
-                    <div class="nav-clock db-status-pill" id="db-status-badge">
-                        <span class="db-status-dot"></span>
-                        <span class="db-status-text" id="db-status-text" data-translate="db_status_offline">DB OFFLINE</span>
-                    </div>
-
-                    <!-- User Profile drop -->
-                    <div class="user-profile">
-                        <div class="avatar">SF</div>
-                        <div class="user-info">
-                            <span class="user-name">SK Fruits</span>
-                            <span class="user-role" data-translate="brand_subtitle">Chennai, TN</span>
+                    <div class="navbar-status-row">
+                        <!-- Glowing Database Connection Badge -->
+                        <div class="nav-clock db-status-pill" id="db-status-badge">
+                            <span class="db-status-dot"></span>
+                            <span class="db-status-text" id="db-status-text" data-translate="db_status_offline">DB OFFLINE</span>
                         </div>
-                    </div>
 
-                    <!-- Logout Button -->
-                    <button class="icon-btn" id="btn-logout" title="Logout" style="margin-left: 8px;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                    </button>
+                        <!-- User Profile drop -->
+                        <div class="user-profile">
+                            <div class="avatar">SF</div>
+                            <div class="user-info">
+                                <span class="user-name">SK Fruits</span>
+                                <span class="user-role" data-translate="brand_subtitle">Chennai, TN</span>
+                            </div>
+                        </div>
+
+                        <!-- Logout Button -->
+                        <button class="icon-btn" id="btn-logout" title="Logout">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" y1="12" x2="9" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -173,7 +168,7 @@
                     </div>
                     <div class="metric-footer">
                         <div style="height: 6px; border-radius: 3px; background: var(--neon-purple); width: 100%; box-shadow: 0 0 10px var(--neon-purple); margin-top: 8px;"></div>
-                        <span style="font-size:0.68rem; color:var(--text-secondary); display:block; margin-top:5px" data-translate="metric_asset_valuation">Asset Valuation</span>
+                        <span class="metric-caption" data-translate="metric_asset_valuation">Asset Valuation</span>
                     </div>
                 </div>
 
@@ -194,7 +189,7 @@
                     </div>
                     <div class="metric-footer">
                         <div class="sparkline-container" id="sparkline-sales"></div>
-                        <span style="font-size:0.68rem; color:var(--text-secondary); display:block; margin-top:5px" data-translate="metric_sale_trend">vs yesterday</span>
+                        <span class="metric-caption" data-translate="metric_sale_trend">vs yesterday</span>
                     </div>
                 </div>
 
@@ -215,7 +210,7 @@
                     </div>
                     <div class="metric-footer">
                         <div class="sparkline-container" id="sparkline-profit"></div>
-                        <span style="font-size:0.68rem; color:var(--text-secondary); display:block; margin-top:5px" data-translate="metric_profit_trend">net gain margin</span>
+                        <span class="metric-caption" data-translate="metric_profit_trend">net gain margin</span>
                     </div>
                 </div>
 
@@ -247,7 +242,7 @@
                     <div class="card-title-bar">
                         <span class="card-title" data-translate="title_recent_activity">Live Shop Operations Log</span>
                     </div>
-                    <div id="activity-list" class="activity-feed" style="max-height: 280px; overflow-y: auto; padding-right: 5px;">
+                    <div id="activity-list" class="activity-feed">
                         <!-- Populated by app.js -->
                     </div>
                 </div>
@@ -288,7 +283,7 @@
                     </span>
                     
                     <!-- Table filter tabs & actions -->
-                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div class="table-toolbar">
                         <div class="table-filter-tabs">
                             <button class="filter-btn active" data-filter="all" data-translate="filter_all">All Varieties</button>
                             <button class="filter-btn" data-filter="low" data-translate="filter_low">Low/Danger</button>
@@ -323,7 +318,7 @@
 
             <!-- Stock History View -->
             <div id="stock-history-view" class="page-view" style="display: none;">
-                <section class="glass-panel" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <section class="glass-panel no-print" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                     <div>
                         <span class="card-title" data-translate="nav_stock_history">Stock History</span>
                         <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Audit every movement of your shop inventory.</p>
@@ -340,33 +335,38 @@
                     </div>
                 </section>
 
-                <!-- Summary Metrics Grid -->
-                <section class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
-                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
-                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_trans">Total Transactions</span>
-                        <span id="summary-total-trans" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px;">0</span>
+                <div id="report-print-area">
+                    <div class="report-print-header">
+                        <h1 class="report-print-title">SK Fruits — Stock History Report</h1>
+                        <p class="report-print-meta" id="stock-history-print-date"></p>
                     </div>
-                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
-                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_added">Stock Added Today</span>
-                        <span id="summary-added-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--neon-green);">0 kg</span>
-                    </div>
-                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
-                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_sales">Stock Sold Today</span>
-                        <span id="summary-sales-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--electric-blue);">0 kg</span>
-                    </div>
-                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
-                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_waste">Stock Wasted Today</span>
-                        <span id="summary-waste-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--apple-red);">0 kg</span>
-                    </div>
-                    <div class="glass-panel metric-card" style="padding: 1.5rem;">
-                        <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_most">Most Updated Product</span>
-                        <span id="summary-most-updated" class="metric-value" style="font-size: 1.25rem; display: block; margin-top: 10px;">-</span>
-                    </div>
-                </section>
 
-                <div class="history-main-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+                    <!-- Summary Metrics Grid -->
+                    <section class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+                        <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                            <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_trans">Total Transactions</span>
+                            <span id="summary-total-trans" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px;">0</span>
+                        </div>
+                        <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                            <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_added">Stock Added Today</span>
+                            <span id="summary-added-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--neon-green);">0 kg</span>
+                        </div>
+                        <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                            <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_sales">Stock Sold Today</span>
+                            <span id="summary-sales-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--electric-blue);">0 kg</span>
+                        </div>
+                        <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                            <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_waste">Stock Wasted Today</span>
+                            <span id="summary-waste-today" class="metric-value" style="font-size: 1.5rem; display: block; margin-top: 10px; color: var(--apple-red);">0 kg</span>
+                        </div>
+                        <div class="glass-panel metric-card" style="padding: 1.5rem;">
+                            <span class="metric-title" style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;" data-translate="summary_most">Most Updated Product</span>
+                            <span id="summary-most-updated" class="metric-value" style="font-size: 1.25rem; display: block; margin-top: 10px;">-</span>
+                        </div>
+                    </section>
+
                     <section class="glass-panel" style="padding: 0; overflow: hidden;">
-                        <div class="history-filters" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--glass-border); gap: 15px; flex-wrap: wrap;">
+                        <div class="history-filters no-print" style="padding: 20px; display: flex; justify-content: space-between; border-bottom: 1px solid var(--glass-border); gap: 15px; flex-wrap: wrap;">
                             <input type="text" id="history-search" class="form-input" style="max-width: 300px; margin: 0;" placeholder="Search product or user...">
                             <select id="history-product-filter" class="form-input" style="max-width: 150px; margin: 0; background-color: #0a0a0a;">
                                 <option value="All" data-translate="filter_all">All Varieties</option>
@@ -398,7 +398,9 @@
                             </table>
                         </div>
                     </section>
+                </div>
 
+                <div class="history-main-grid no-print">
                     <section class="glass-panel history-timeline-panel">
                         <h3 class="card-title" style="margin-bottom: 20px;">Activity Timeline</h3>
                         <div id="history-timeline" style="display: flex; flex-direction: column; gap: 20px;">
@@ -412,7 +414,7 @@
     </div>
 
     <!-- SIMULATION MODAL: SELL FRUIT -->
-    <div class="modal-overlay" id="modal-sell-variety">
+    <div class="modal-overlay no-print" id="modal-sell-variety">
         <div class="modal-content">
             <button class="modal-close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -441,7 +443,7 @@
     </div>
 
     <!-- SIMULATION MODAL: WASTE FRUIT -->
-    <div class="modal-overlay" id="modal-waste-variety">
+    <div class="modal-overlay no-print" id="modal-waste-variety">
         <div class="modal-content">
             <button class="modal-close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -480,7 +482,7 @@
     </div>
 
     <!-- SIMULATION MODAL: RESTOCK FRUIT -->
-    <div class="modal-overlay" id="modal-restock-variety">
+    <div class="modal-overlay no-print" id="modal-restock-variety">
         <div class="modal-content">
             <button class="modal-close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -509,7 +511,7 @@
     </div>
 
     <!-- PREMIUM MODAL: EDIT FRUIT VARIETY -->
-    <div class="modal-overlay" id="modal-edit-variety">
+    <div class="modal-overlay no-print" id="modal-edit-variety">
         <div class="modal-content" style="max-width: 580px;">
             <button class="modal-close" aria-label="Close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -592,7 +594,7 @@
     </div>
 
     <!-- SIMULATION MODAL: ADD CUSTOM FRUIT VARIETY -->
-    <div class="modal-overlay" id="modal-add-variety">
+    <div class="modal-overlay no-print" id="modal-add-variety">
         <div class="modal-content" style="max-width: 640px; padding: 32px;">
             <button class="modal-close">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>

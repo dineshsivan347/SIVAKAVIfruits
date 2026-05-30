@@ -39,12 +39,37 @@
       -moz-appearance: textfield;
     }
     .success-text { color: #34d399; }
+    @media (max-width: 768px) {
+      body.daily-sales-page .main-wrapper {
+        padding: 12px 12px 96px;
+        overflow-x: hidden;
+      }
+      body.daily-sales-page #daily-sales-root {
+        padding-left: 0;
+        padding-right: 0;
+        overflow-x: hidden;
+        max-width: 100%;
+      }
+      body.daily-sales-page .table-scroll {
+        max-height: none;
+      }
+      body.daily-sales-page .daily-sales-print-root {
+        overflow-x: hidden;
+      }
+    }
     /* Daily sales print rules live in style.css (body.daily-sales-page) */
   </style>
 </head>
 <body class="app-shell daily-sales-page">
   <div class="app-container">
-    <aside class="sidebar">
+    <div class="menu-toggle no-print" id="mobile-toggle" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </div>
+    <aside class="sidebar no-print">
       <div class="logo-container">
         <div class="logo-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" width="24" height="24">
@@ -128,6 +153,35 @@
   <script type="text/babel">
     const root = ReactDOM.createRoot(document.getElementById('daily-sales-root'));
     root.render(<DailySalesReport />);
+  </script>
+  <script>
+    (function () {
+      const toggle = document.getElementById('mobile-toggle');
+      const sidebar = document.querySelector('.sidebar');
+      if (!toggle || !sidebar) return;
+
+      function setSidebarOpen(open) {
+        sidebar.classList.toggle('mobile-open', open);
+        document.body.classList.toggle('sidebar-open', open);
+      }
+
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setSidebarOpen(!sidebar.classList.contains('mobile-open'));
+      });
+
+      document.body.addEventListener('click', (e) => {
+        if (!sidebar.classList.contains('mobile-open')) return;
+        if (sidebar.contains(e.target) || toggle.contains(e.target)) return;
+        setSidebarOpen(false);
+      });
+
+      document.querySelectorAll('.sidebar .nav-link').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth <= 768) setSidebarOpen(false);
+        });
+      });
+    })();
   </script>
 </body>
 </html>
